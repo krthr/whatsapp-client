@@ -28,12 +28,8 @@
                       </v-list-item-avatar>
 
                       <v-list-item-content>
-                        <v-list-item-title
-                          v-html="item.title"
-                        ></v-list-item-title>
-                        <v-list-item-subtitle
-                          v-html="item.subtitle"
-                        ></v-list-item-subtitle>
+                        <v-list-item-title v-html="item.title"></v-list-item-title>
+                        <v-list-item-subtitle v-html="item.subtitle"></v-list-item-subtitle>
                       </v-list-item-content>
                     </v-list-item>
                   </template>
@@ -42,8 +38,19 @@
               <!-- // Contact list -->
 
               <!-- Chat -->
-              <v-col class="flex-column">
-                <div id="messages-list" class="flex-column" style="">
+              <v-col>
+                <div no-gutters id="current-contact">
+                  <v-list-item>
+                    <v-list-item-avatar>
+                      <v-img :src="current.avatar"></v-img>
+                    </v-list-item-avatar>
+
+                    <v-list-item-content>
+                      <v-list-item-title v-html="current.title"></v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </div>
+                <div id="messages-list" class="flex-column" style>
                   <div
                     v-for="(message, index) in messages"
                     :key="index"
@@ -58,9 +65,7 @@
                           message.me ? 'me' : ''
                         }`
                       "
-                    >
-                      {{ message.text }}
-                    </div>
+                    >{{ message.text }}</div>
                   </div>
                 </div>
 
@@ -71,8 +76,7 @@
                     label="Escribir mensaje..."
                     outlined
                     @click:append="() => {}"
-                  >
-                  </v-text-field>
+                  ></v-text-field>
                 </div>
               </v-col>
               <!-- // Chat -->
@@ -87,7 +91,7 @@
 <script>
 const STATES = {
   QRCODE: "QRCODE",
-  LOGGED_IN: "LOGGED_IN",
+  LOGGED_IN: "LOGGED_IN"
 };
 
 export default {
@@ -95,79 +99,83 @@ export default {
 
   data: () => ({
     state: STATES.LOGGED_IN,
+    current: {
+      avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
+      title: 'Summer BBQ'
+    },
     contacts: [
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
         title: 'Summer BBQ <span class="grey--text text--lighten-1">4</span>',
         subtitle:
-          "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend.",
+          "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend."
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/3.jpg",
         title: "Oui oui",
         subtitle:
-          "<span class='text--primary'>Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?",
+          "<span class='text--primary'>Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?"
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/4.jpg",
         title: "Birthday gift",
         subtitle:
-          "<span class='text--primary'>Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?",
+          "<span class='text--primary'>Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?"
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/5.jpg",
         title: "Recipe to try",
         subtitle:
-          "<span class='text--primary'>Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos.",
+          "<span class='text--primary'>Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos."
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
         title: 'Summer BBQ <span class="grey--text text--lighten-1">4</span>',
         subtitle:
-          "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend.",
+          "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend."
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/3.jpg",
         title: "Oui oui",
         subtitle:
-          "<span class='text--primary'>Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?",
+          "<span class='text--primary'>Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?"
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/4.jpg",
         title: "Birthday gift",
         subtitle:
-          "<span class='text--primary'>Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?",
+          "<span class='text--primary'>Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?"
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/5.jpg",
         title: "Recipe to try",
         subtitle:
-          "<span class='text--primary'>Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos.",
-      },
+          "<span class='text--primary'>Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos."
+      }
     ],
     messages: [
       {
         me: false,
-        text: "En sus sueños",
+        text: "En sus sueños"
       },
       {
         me: false,
-        text: "Cuando alguien cuando alguien extraño era notado",
+        text: "Cuando alguien cuando alguien extraño era notado"
       },
       {
         me: false,
-        text: "Cuando modificaba mucho todo",
+        text: "Cuando modificaba mucho todo"
       },
       {
         me: false,
-        text: "Era notado",
+        text: "Era notado"
       },
       {
         me: true,
-        text: "No creo que sea el principal, ni siquiera en mi vida",
-      },
-    ],
-  }),
+        text: "No creo que sea el principal, ni siquiera en mi vida"
+      }
+    ]
+  })
 };
 </script>
 
@@ -194,8 +202,12 @@ export default {
 }
 
 #messages-list {
-  height: calc(80vh - 50px - 70px);
-  max-height: calc(80vh - 50px - 70px);
+  height: calc(80vh - 50px - 70px - 55px);
+  max-height: calc(80vh - 50px - 70px - 55px);
+}
+
+#current-contact {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .me.message-text {
