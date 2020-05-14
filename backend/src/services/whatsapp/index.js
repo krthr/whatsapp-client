@@ -255,7 +255,7 @@ class WhatsAppService extends EventEmitter {
 
     this.ws.on("open", () => this.init());
     this.ws.on("message", (msg) => this.handleMessage(msg));
-    this.ws.on("close", () => null);
+    this.ws.on("close", () => this.emit("close"));
     this.ws.on("error", () => null);
   }
 }

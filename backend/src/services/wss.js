@@ -30,6 +30,10 @@ wss.on("connection", (ws) => {
     console.log("⚡ WhatsApp service started with id: " + clientId);
   });
 
+  whatsapp.on("close", () => {
+    ws.close();
+  });
+
   ws.on("message", (message) => {
     try {
       message = JSON.parse(message);
