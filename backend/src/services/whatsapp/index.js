@@ -18,6 +18,7 @@ class WhatsAppService extends EventEmitter {
       serverToken: null,
       browserToken: null,
       me: null,
+      pushname: null,
       secret: null,
       sharedSecret: null,
       secretPublicKey: null,
@@ -68,7 +69,7 @@ class WhatsAppService extends EventEmitter {
           this.ping();
           this.processConn(data[1]);
         } else {
-          //console.log(data);
+          this.emit("message", data);
         }
       } else {
         message = cryptoService.toArrayBuffer(message);
@@ -77,10 +78,12 @@ class WhatsAppService extends EventEmitter {
         let messageContent = cryptoService.sjcl.codec.arrayBuffer.toBits(
           message.slice(delimPos + 1)
         );
+
         let hmacValidation = cryptoService.HmacSha256(
           this.loginInfo.key.macKey,
           cryptoService.ba.bitSlice(messageContent, 32 * 8)
         );
+
         if (
           !cryptoService.sjcl.bitArray.equal(
             hmacValidation,
@@ -154,12 +157,14 @@ class WhatsAppService extends EventEmitter {
     secret,
     serverToken,
     sharedSecret,
+    pushname,
     wid,
   }) {
     this.connectionOpts.clientToken = clientToken;
     this.connectionOpts.serverToken = serverToken;
     this.connectionOpts.browserToken = browserToken;
     this.connectionOpts.me = wid;
+    this.connectionOpts.pushname = pushname;
 
     this.connectionOpts.secret = cryptoService.base64ToBitArray(secret);
     this.connectionOpts.secretPublicKey = cryptoService.generateSecreyPublicKey(
@@ -224,7 +229,6 @@ class WhatsAppService extends EventEmitter {
    * 2. Send the message `<message_tag>,["admin","init",[0,4,315],["Windows","Chrome","10"],"<client_id>",true]`
    */
   init() {
-    console.log("init");
     this.loginInfo.clientId = cryptoService.generateRandomBytes();
     const messageTag = Date.now();
 
@@ -235,6 +239,8 @@ class WhatsAppService extends EventEmitter {
     this.ws.send(
       `${messageTag},["admin","init",[0,4,315],["Windows Wilson","IE","7"],"${this.loginInfo.clientId}",true]`
     );
+
+    this.emit("init", this.loginInfo.clientId);
   }
 
   /**

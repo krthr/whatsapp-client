@@ -1,3 +1,7 @@
+/**
+ * @author krthr
+ */
+
 const axlsign = require("axlsign");
 const sjcl = require("../lib/sjcl");
 
@@ -6,10 +10,18 @@ const ba = sjcl.bitArray;
 const generateRandomBytes = (n = 16) =>
   sjcl.codec.base64.fromBits(sjcl.random.randomWords(n / 4));
 
-const arrayBufferToBits = (buff) => sjcl.codec.arrayBuffer.toBits(buff);
 const base64ToBitArray = (str) => sjcl.codec.base64.toBits(str);
 
 const bitArrayEqual = (a, b) => sjcl.bitArray.equal(a, b);
+
+const toArrayBuffer = (buf) => {
+  var ab = new ArrayBuffer(buf.length);
+  var view = new Uint8Array(ab);
+  for (var i = 0; i < buf.length; ++i) {
+    view[i] = buf[i];
+  }
+  return ab;
+};
 
 const hexFromBits = (bits) => sjcl.codec.hex.fromBits(bits);
 
@@ -21,20 +33,31 @@ const generateKeyPair = () => {
   return axlsign.generateKeyPair(new Uint8Array(keySeed));
 };
 
-const generateSharedSecret = (private, secretPublicKey) =>
-  axlsign.sharedKey(private, secretPublicKey);
+/**
+ * Generate the shared key.
+ * @param {*} private
+ * @param {*} secretPublicKey
+ */
+const generateSharedSecret = (private, secretPublicKey) => {
+  return axlsign.sharedKey(private, secretPublicKey);
+};
 
-const generateSecreyPublicKey = (secret) =>
-  new Uint8Array(
+/**
+ *
+ * @param {*} secret
+ */
+const generateSecreyPublicKey = (secret) => {
+  return new Uint8Array(
     sjcl.codec.arrayBuffer.fromBits(ba.bitSlice(secret, 0, 32 * 8))
   );
+};
 
 const numToBits = (n) =>
   sjcl.codec.hex.toBits((n < 16 ? "0" : "") + n.toString(16));
 
 function repeatedNumToBits(n, repeats) {
-  let nBits = numToBits(n),
-    ret = [];
+  let nBits = numToBits(n);
+  let ret = [];
   for (let i = 0; i < repeats; i++) ret = sjcl.bitArray.concat(ret, nBits);
   return ret;
 }
@@ -43,6 +66,11 @@ function repeatedNumToBits(n, repeats) {
 const HmacSha256 = (keyBits, signBits) =>
   new sjcl.misc.hmac(keyBits, sjcl.hash.sha256).mac(signBits);
 
+/**
+ *
+ * @param {*} key
+ * @param {*} length
+ */
 const HKDF = (key, length) => {
   //expects key to be bit array, implements RFC 5869, some parts translated from https://github.com/MirkoDziadzka/pyhkdf
   let keyStream = [],
@@ -67,39 +95,39 @@ sjcl.beware[
   "CBC mode is dangerous because it doesn't protect message integrity."
 ]();
 
-function AESEncrypt(key, plainbits) {
+/**
+ *
+ * @param {*} key
+ * @param {*} plainbits
+ */
+const AESEncrypt = (key, plainbits) => {
   let iv = sjcl.random.randomWords(AES_BLOCK_SIZE / 4);
   let prp = new sjcl.cipher.aes(key);
   let encrypted = sjcl.mode.cbc.encrypt(prp, plainbits, iv);
 
   return sjcl.bitArray.concat(iv, encrypted);
-}
+};
 
-function AESDecrypt(key, cipherbits) {
-  let iv = sjcl.bitArray.bitSlice(cipherbits, 0, AES_BLOCK_SIZE * 8);
-  let prp = new sjcl.cipher.aes(key);
-  let decrypted = sjcl.mode.cbc.decrypt(
+/**
+ *
+ * @param {*} key
+ * @param {*} cipherbits
+ */
+const AESDecrypt = (key, cipherbits) => {
+  const iv = sjcl.bitArray.bitSlice(cipherbits, 0, AES_BLOCK_SIZE * 8);
+  const prp = new sjcl.cipher.aes(key);
+  const decrypted = sjcl.mode.cbc.decrypt(
     prp,
     sjcl.bitArray.bitSlice(cipherbits, AES_BLOCK_SIZE * 8),
     iv
   );
 
   return decrypted;
-}
-
-function toArrayBuffer(buf) {
-  var ab = new ArrayBuffer(buf.length);
-  var view = new Uint8Array(ab);
-  for (var i = 0; i < buf.length; ++i) {
-    view[i] = buf[i];
-  }
-  return ab;
-}
+};
 
 module.exports = {
   hexFromBits,
   bitArrayEqual,
-  arrayBufferToBits,
   generateKeyPair,
   AESDecrypt,
   AESEncrypt,
