@@ -24,20 +24,27 @@
             <v-row class="fill-height">
               <!-- Contact list -->
               <v-col cols="12" sm="5" lg="4">
-                <v-list id="contact-list" three-line>
-                  <template v-for="(item, index) in contacts">
-                    <v-list-item :key="index" @click="() => null">
+                <v-subheader>Chats</v-subheader>
+
+                <v-list id="contact-list">
+                  <template v-for="(item, index) in chat">
+                    <v-list-item
+                      :key="index"
+                      @click="() => $store.commit('setActualChat', item)"
+                    >
+                      <!-- 
                       <v-list-item-avatar>
                         <v-img :src="item.avatar"></v-img>
                       </v-list-item-avatar>
+                      -->
 
                       <v-list-item-content>
-                        <v-list-item-title
-                          v-html="item.title"
-                        ></v-list-item-title>
-                        <v-list-item-subtitle
-                          v-html="item.subtitle"
-                        ></v-list-item-subtitle>
+                        <v-list-item-title>
+                          {{ item.name || item.vname || item.short }}
+                        </v-list-item-title>
+                        <v-list-item-subtitle>
+                          {{ item.jid }}
+                        </v-list-item-subtitle>
                       </v-list-item-content>
                     </v-list-item>
                   </template>
@@ -46,37 +53,45 @@
               <!-- // Contact list -->
 
               <!-- Chat -->
-              <v-col>
+              <v-col v-if="actualChat">
                 <div no-gutters id="current-contact">
                   <v-list-item>
-                    <v-list-item-avatar>
+                    <!-- <v-list-item-avatar>
                       <v-img :src="current.avatar"></v-img>
                     </v-list-item-avatar>
+                    -->
 
                     <v-list-item-content>
-                      <v-list-item-title
-                        v-html="current.title"
-                      ></v-list-item-title>
+                      <v-list-item-title>
+                        {{
+                          actualChat.name ||
+                            actualChat.vname ||
+                            actualChat.short
+                        }}
+                      </v-list-item-title>
+                      <v-list-item-subtitle>
+                        {{ actualChat.jid }}
+                      </v-list-item-subtitle>
                     </v-list-item-content>
                   </v-list-item>
                 </div>
                 <div id="messages-list" class="flex-column" style>
                   <div
-                    v-for="(message, index) in messages"
+                    v-for="(message, index) in actualChat.messages"
                     :key="index"
                     class="message-bubble py-1"
                     :style="{
-                      'text-align': message.me ? 'right' : 'left',
+                      'text-align': message.fromMe ? 'right' : 'left',
                     }"
                   >
                     <div
                       :class="
                         `pa-3 px-4 white--text message-text ${
-                          message.me ? 'me' : ''
+                          message.fromMe ? 'me' : ''
                         }`
                       "
                     >
-                      {{ message.text }}
+                      {{ message.conversation }}
                     </div>
                   </div>
                 </div>
@@ -104,111 +119,28 @@
 <script>
 import { mapGetters, mapMutations } from "vuex";
 import { onClose, onError, onMessage, onOpen, send } from "../services/ws";
-import QRCode from "qrcode";
+import { generateQrCode } from "../services/qr";
 
 export default {
   name: "Home",
 
   data: () => ({
     qrCodeUrl: null,
-    current: {
-      avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
-      title: "Summer BBQ",
-    },
-    contacts: [
-      {
-        avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
-        title: 'Summer BBQ <span class="grey--text text--lighten-1">4</span>',
-        subtitle:
-          "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend.",
-      },
-      {
-        avatar: "https://cdn.vuetifyjs.com/images/lists/3.jpg",
-        title: "Oui oui",
-        subtitle:
-          "<span class='text--primary'>Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?",
-      },
-      {
-        avatar: "https://cdn.vuetifyjs.com/images/lists/4.jpg",
-        title: "Birthday gift",
-        subtitle:
-          "<span class='text--primary'>Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?",
-      },
-      {
-        avatar: "https://cdn.vuetifyjs.com/images/lists/5.jpg",
-        title: "Recipe to try",
-        subtitle:
-          "<span class='text--primary'>Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos.",
-      },
-      {
-        avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
-        title: 'Summer BBQ <span class="grey--text text--lighten-1">4</span>',
-        subtitle:
-          "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend.",
-      },
-      {
-        avatar: "https://cdn.vuetifyjs.com/images/lists/3.jpg",
-        title: "Oui oui",
-        subtitle:
-          "<span class='text--primary'>Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?",
-      },
-      {
-        avatar: "https://cdn.vuetifyjs.com/images/lists/4.jpg",
-        title: "Birthday gift",
-        subtitle:
-          "<span class='text--primary'>Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?",
-      },
-      {
-        avatar: "https://cdn.vuetifyjs.com/images/lists/5.jpg",
-        title: "Recipe to try",
-        subtitle:
-          "<span class='text--primary'>Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos.",
-      },
-    ],
-    messages: [
-      {
-        me: false,
-        text: "En sus sueños",
-      },
-      {
-        me: false,
-        text: "Cuando alguien cuando alguien extraño era notado",
-      },
-      {
-        me: false,
-        text: "Cuando modificaba mucho todo",
-      },
-      {
-        me: false,
-        text: "Era notado",
-      },
-      {
-        me: true,
-        text: "No creo que sea el principal, ni siquiera en mi vida",
-      },
-    ],
   }),
 
   computed: {
-    ...mapGetters(["state"]),
+    ...mapGetters(["actualChat", "chat", "contacts", "state"]),
   },
 
   methods: {
-    async renderQrCode(qrCode) {
-      const url = await QRCode.toDataURL(qrCode, {
-        errorCorrectionLevel: "M",
-      });
-      this.qrCodeUrl = url;
-    },
-
-    ...mapMutations(["setState", "parseMessage"]),
+    ...mapMutations(["parseMessage", "setMe", "setState"]),
   },
 
   mounted() {
     onClose(() => console.log("closed"));
     onError((error) => console.error(error));
 
-    onMessage(({ c, d }) => {
+    onMessage(async ({ c, d }) => {
       switch (c) {
         // Start whatsapp service
         case 0: {
@@ -218,12 +150,14 @@ export default {
         // QRCode
         case 1: {
           this.setState("QRCODE");
-          this.renderQrCode(d);
+          this.qrCodeUrl = await generateQrCode(d);
+
           break;
         }
 
         // Logged In
         case 2: {
+          this.setMe(d);
           this.setState("LOGGED_IN");
           break;
         }
@@ -236,10 +170,7 @@ export default {
       }
     });
 
-    onOpen(() => {
-      console.log("welcome");
-      send({ c: 0 });
-    });
+    onOpen(() => send({ c: 0 }));
   },
 };
 </script>
@@ -262,8 +193,8 @@ export default {
 }
 
 #contact-list {
-  height: calc(80vh - 56px);
-  max-height: calc(80vh - 56px);
+  height: calc(80vh - 56px - 48px);
+  max-height: calc(80vh - 56px - 48px);
 }
 
 #messages-list {

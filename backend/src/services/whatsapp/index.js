@@ -109,9 +109,15 @@ class WhatsAppService extends EventEmitter {
         try {
           let msg = whatsappReadBinary(Buffer.from(arr), true);
           this.emit("message", msg);
-        } catch (e) {}
+
+          console.log({ msg });
+        } catch (e) {
+          console.log(e);
+        }
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   /**

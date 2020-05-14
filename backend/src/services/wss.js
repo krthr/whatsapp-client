@@ -31,6 +31,7 @@ wss.on("connection", (ws) => {
   });
 
   whatsapp.on("close", () => {
+    console.log("WhatsApp closed the connection " + id);
     ws.close();
   });
 

@@ -11,7 +11,7 @@ worker.onmessage = ({ data: { type, data } }) => {
     }
 
     case "chat": {
-      // console.log({ data });
+      store.commit("setChat", data);
       break;
     }
   }

@@ -8,43 +8,37 @@ const parse = (temp) => {
   return Buffer.from(temp.data).toString();
 };
 
+const parseData = (data) => {
+  const parsedData = {};
+
+  for (let item of data) {
+    const temp = item[1];
+    for (let key in temp) temp[key] = parse(temp[key]);
+
+    temp["jid"] = temp["jid"].split("@")[0];
+    parsedData[temp.jid] = temp;
+  }
+
+  return parsedData;
+};
+
 /**
  *
  * @param {Array<Array<any>>} data
  */
 const parseChat = (data) => {
-  const chat = {};
+  const parsedData = parseData(data);
 
-  for (let chatData of data) {
-    const temp = chatData[1];
+  return Object.values(parsedData).reduce((acc, curr) => {
+    acc[curr.jid] = {
+      ...curr,
+      messages: [],
+    };
 
-    for (let key in temp) temp[key] = parse(temp[key]);
-
-    if (!chat[temp.jid]) {
-      chat[temp.jid] = [];
-    }
-
-    chat[temp.jid] = [...chat[temp.jid], temp];
-  }
-
-  return chat;
+    return acc;
+  }, {});
 };
-
-/**
- *
- * @param {Array<Array<any>>} data
- */
-const parseContacts = (data) => {
-  const contacts = {};
-
-  for (let user of data) {
-    const temp = user[1];
-    for (let key in temp) temp[key] = parse(temp[key]);
-    contacts[temp.jid] = temp;
-  }
-
-  return contacts;
-};
+const parseContacts = parseData;
 
 onmessage = ({ data: { type, data } }) => {
   switch (type) {

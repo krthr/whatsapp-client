@@ -7,6 +7,12 @@ const STATES = {
 export default {
   state: STATES.LOADING,
 
+  me: {
+    wid: null,
+    pushname: null,
+  },
+
+  actualChat: null,
+  chat: {},
   contacts: {},
-  messages: {},
 };
