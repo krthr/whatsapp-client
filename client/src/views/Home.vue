@@ -3,15 +3,19 @@
     <v-row class="fill-height" align="center" justify="center">
       <v-col cols="12" sm="11" md="9">
         <v-card tile height="80vh" max-height="80vh">
-          <!-- -->
           <v-card-text
-            v-if="state == 'QRCODE'"
+            v-if="state == 'LOADING'"
             class="fill-height d-flex align-center justify-center"
           >
-            <img
-              src="https://store-images.s-microsoft.com/image/apps.33967.13510798887182917.246b0a3d-c3cc-46fc-9cea-021069d15c09.392bf5f5-ade4-4b36-aa63-bb15d5c3817a"
-              style="width: 300px"
-            />
+            <v-progress-circular indeterminate size="80"></v-progress-circular>
+          </v-card-text>
+
+          <!-- -->
+          <v-card-text
+            v-else-if="state == 'QRCODE'"
+            class="fill-height d-flex align-center justify-center"
+          >
+            <img :src="qrCodeUrl" style="width: 300px" />
           </v-card-text>
           <!-- -->
 
@@ -28,8 +32,12 @@
                       </v-list-item-avatar>
 
                       <v-list-item-content>
-                        <v-list-item-title v-html="item.title"></v-list-item-title>
-                        <v-list-item-subtitle v-html="item.subtitle"></v-list-item-subtitle>
+                        <v-list-item-title
+                          v-html="item.title"
+                        ></v-list-item-title>
+                        <v-list-item-subtitle
+                          v-html="item.subtitle"
+                        ></v-list-item-subtitle>
                       </v-list-item-content>
                     </v-list-item>
                   </template>
@@ -46,7 +54,9 @@
                     </v-list-item-avatar>
 
                     <v-list-item-content>
-                      <v-list-item-title v-html="current.title"></v-list-item-title>
+                      <v-list-item-title
+                        v-html="current.title"
+                      ></v-list-item-title>
                     </v-list-item-content>
                   </v-list-item>
                 </div>
@@ -65,7 +75,9 @@
                           message.me ? 'me' : ''
                         }`
                       "
-                    >{{ message.text }}</div>
+                    >
+                      {{ message.text }}
+                    </div>
                   </div>
                 </div>
 
@@ -82,6 +94,7 @@
               <!-- // Chat -->
             </v-row>
           </v-card-text>
+          <!-- -->
         </v-card>
       </v-col>
     </v-row>
@@ -89,93 +102,145 @@
 </template>
 
 <script>
-const STATES = {
-  QRCODE: "QRCODE",
-  LOGGED_IN: "LOGGED_IN"
-};
+import { mapGetters, mapMutations } from "vuex";
+import { onClose, onError, onMessage, onOpen, send } from "../services/ws";
+import QRCode from "qrcode";
 
 export default {
   name: "Home",
 
   data: () => ({
-    state: STATES.LOGGED_IN,
+    qrCodeUrl: null,
     current: {
       avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
-      title: 'Summer BBQ'
+      title: "Summer BBQ",
     },
     contacts: [
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
         title: 'Summer BBQ <span class="grey--text text--lighten-1">4</span>',
         subtitle:
-          "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend."
+          "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend.",
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/3.jpg",
         title: "Oui oui",
         subtitle:
-          "<span class='text--primary'>Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?"
+          "<span class='text--primary'>Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?",
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/4.jpg",
         title: "Birthday gift",
         subtitle:
-          "<span class='text--primary'>Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?"
+          "<span class='text--primary'>Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?",
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/5.jpg",
         title: "Recipe to try",
         subtitle:
-          "<span class='text--primary'>Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos."
+          "<span class='text--primary'>Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos.",
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
         title: 'Summer BBQ <span class="grey--text text--lighten-1">4</span>',
         subtitle:
-          "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend."
+          "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend.",
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/3.jpg",
         title: "Oui oui",
         subtitle:
-          "<span class='text--primary'>Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?"
+          "<span class='text--primary'>Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?",
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/4.jpg",
         title: "Birthday gift",
         subtitle:
-          "<span class='text--primary'>Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?"
+          "<span class='text--primary'>Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?",
       },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/5.jpg",
         title: "Recipe to try",
         subtitle:
-          "<span class='text--primary'>Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos."
-      }
+          "<span class='text--primary'>Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos.",
+      },
     ],
     messages: [
       {
         me: false,
-        text: "En sus sueños"
+        text: "En sus sueños",
       },
       {
         me: false,
-        text: "Cuando alguien cuando alguien extraño era notado"
+        text: "Cuando alguien cuando alguien extraño era notado",
       },
       {
         me: false,
-        text: "Cuando modificaba mucho todo"
+        text: "Cuando modificaba mucho todo",
       },
       {
         me: false,
-        text: "Era notado"
+        text: "Era notado",
       },
       {
         me: true,
-        text: "No creo que sea el principal, ni siquiera en mi vida"
+        text: "No creo que sea el principal, ni siquiera en mi vida",
+      },
+    ],
+  }),
+
+  computed: {
+    ...mapGetters(["state"]),
+  },
+
+  methods: {
+    async renderQrCode(qrCode) {
+      const url = await QRCode.toDataURL(qrCode, {
+        errorCorrectionLevel: "M",
+      });
+      this.qrCodeUrl = url;
+    },
+
+    ...mapMutations(["setState", "parseMessage"]),
+  },
+
+  mounted() {
+    onClose(() => console.log("closed"));
+    onError((error) => console.error(error));
+
+    onMessage(({ c, d }) => {
+      switch (c) {
+        // Start whatsapp service
+        case 0: {
+          break;
+        }
+
+        // QRCode
+        case 1: {
+          this.setState("QRCODE");
+          this.renderQrCode(d);
+          break;
+        }
+
+        // Logged In
+        case 2: {
+          this.setState("LOGGED_IN");
+          break;
+        }
+
+        // New message
+        case 3: {
+          this.parseMessage(d);
+          break;
+        }
       }
-    ]
-  })
+    });
+
+    onOpen(() => {
+      console.log("welcome");
+      send({ c: 0 });
+    });
+  },
 };
 </script>
 
